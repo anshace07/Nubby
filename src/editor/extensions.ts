@@ -92,8 +92,16 @@ export const LabelTag = Mark.create({
     return {
       toggleLabelTag:
         () =>
-        ({ commands }) =>
-          commands.toggleMark(this.name),
+        ({ state, commands }) => {
+          // Nothing selected: drop in the "L.P." stamp, like typing "LP: ". Otherwise tag the selection.
+          if (state.selection.empty && !this.editor.isActive(this.name)) {
+            return commands.insertContent([
+              { type: "text", text: "L.P.", marks: [{ type: this.name }] },
+              { type: "text", text: " " },
+            ]);
+          }
+          return commands.toggleMark(this.name);
+        },
     };
   },
   addKeyboardShortcuts() {
@@ -248,7 +256,9 @@ export function nubbyExtensions(placeholder: string): Extensions {
     FontFamily,
     FontSize,
     Highlight.configure({ multicolor: true }),
-    TextAlign.configure({ types: ["heading", "paragraph"] }),
+    // No alignment shortcuts: TipTap's Ctrl+Shift+E / L / R / J would clash with Save as PNG
+    // (Ctrl+Shift+E) and the label tag (Ctrl+Shift+L). Alignment is in the toolbar.
+    TextAlign.extend({ addKeyboardShortcuts: () => ({}) }).configure({ types: ["heading", "paragraph"] }),
     TaskList,
     TaskItem.configure({ nested: true }),
     Link.configure({

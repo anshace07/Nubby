@@ -30,7 +30,7 @@ const HEADINGS: { id: string; level: 1 | 2 | 3 | null; name: string; sample: str
   { id: "text", level: null, name: "Normal text", sample: "Text", hint: "Ctrl Alt 0" },
 ];
 
-type Pop = "font" | "highlight" | "heading" | "box" | "list" | "align" | "sticker" | "page" | null;
+type Pop = "font" | "highlight" | "heading" | "box" | "list" | "align" | "sticker" | "page" | "ink" | "more" | null;
 
 function ToolBtn({
   label,
@@ -39,6 +39,7 @@ function ToolBtn({
   children,
   btnRef,
   disabled,
+  optional,
 }: {
   label: string;
   on?: boolean;
@@ -46,11 +47,13 @@ function ToolBtn({
   children: ReactNode;
   btnRef?: (el: HTMLButtonElement | null) => void;
   disabled?: boolean;
+  /** Dropped first when the compact bar runs out of room (it has a shortcut). */
+  optional?: boolean;
 }) {
   return (
     <button
       ref={btnRef}
-      className={`tool ${on ? "tool--on" : ""}`}
+      className={`tool ${on ? "tool--on" : ""} ${optional ? "tool--opt" : ""}`}
       aria-label={label}
       aria-pressed={on}
       title={label}
@@ -74,6 +77,7 @@ export function Toolbar({
   onAddSticky,
   onImport,
   onMore,
+  compact = false,
 }: {
   editor: Editor | null;
   notebookFont: FontId;
@@ -86,6 +90,8 @@ export function Toolbar({
   onAddSticky: () => void;
   onImport: () => void;
   onMore: (anchor: DOMRect) => void;
+  /** The pop-out mini window: the essentials only, the rest under More. */
+  compact?: boolean;
 }) {
   const [, force] = useReducer((x: number) => x + 1, 0);
   const [pop, setPop] = useState<Pop>(null);
@@ -120,6 +126,8 @@ export function Toolbar({
   const anchor = (k: string) => (el: HTMLButtonElement | null) => {
     anchors.current[k] = el;
   };
+  // In the compact bar some buttons live under More, so their popovers open from there.
+  const anchorFor = (k: string) => anchors.current[k] ?? anchors.current.more ?? null;
 
   const setSize = (n: number) =>
     run((e) => e.chain().focus().setFontSize(`${Math.max(12, Math.min(72, n))}px`).run());
@@ -131,15 +139,105 @@ export function Toolbar({
       ? "alignRight"
       : "alignLeft";
 
+  const inkGroup = (after?: () => void) => (
+    <div className="inks" role="group" aria-label="Ink colour">
+      {INKS.map((ink, i) => {
+        const on = i === 0 ? !color : color?.toLowerCase() === ink.color.toLowerCase();
+        return (
+          <button
+            key={ink.id}
+            className={`ink ${on ? "ink--on" : ""}`}
+            style={{ background: ink.color }}
+            aria-label={`${ink.name} ink (Ctrl+${i + 1})`}
+            aria-pressed={on}
+            title={`${ink.name} ink · Ctrl+${i + 1}`}
+            onClick={() => {
+              run((e) =>
+                i === 0 ? e.chain().focus().unsetColor().run() : e.chain().focus().setColor(ink.color).run(),
+              );
+              after?.();
+            }}
+          />
+        );
+      })}
+      <button
+        className={`ink ink--custom ${color && !INKS.some((k) => k.color.toLowerCase() === color.toLowerCase()) ? "ink--on" : ""}`}
+        aria-label="Custom ink colour"
+        title="Custom ink colour"
+        onClick={() => colorInput.current?.click()}
+      >
+        <span>+</span>
+      </button>
+      <input
+        ref={colorInput}
+        type="color"
+        className="visually-hidden"
+        tabIndex={-1}
+        aria-hidden
+        defaultValue="#C2410C"
+        onChange={(ev) => run((e) => e.chain().focus().setColor(ev.target.value).run())}
+      />
+    </div>
+  );
+
   return (
     <div
-      className="toolbar"
+      className={`toolbar ${compact ? "toolbar--compact" : ""}`}
       role="toolbar"
       aria-label="Formatting"
       onMouseDown={(e) => {
         if (!(e.target as HTMLElement).closest("input")) e.preventDefault();
       }}
     >
+      {compact ? (
+        <>
+      <button
+        ref={anchor("ink")}
+        className={`tool tool--ink ${pop === "ink" ? "tool--on" : ""}`}
+        aria-label="Ink colour"
+        title="Ink colour (Ctrl+1 … 5)"
+        onClick={() => toggle("ink")}
+      >
+        <span className="tool-ink" style={{ background: color ?? INKS[0].color }} />
+      </button>
+      <ToolBtn label="Bold (Ctrl+B)" on={is("bold")} onClick={() => run((e) => e.chain().focus().toggleBold().run())}>
+        <b className="glyph-b">B</b>
+      </ToolBtn>
+      <ToolBtn label="Italic (Ctrl+I)" on={is("italic")} optional onClick={() => run((e) => e.chain().focus().toggleItalic().run())}>
+        <i className="glyph-i">I</i>
+      </ToolBtn>
+      <ToolBtn label="Underline (Ctrl+U)" on={is("underline")} optional onClick={() => run((e) => e.chain().focus().toggleUnderline().run())}>
+        <u className="glyph-u">U</u>
+      </ToolBtn>
+      <span className="tool-sep" />
+      <ToolBtn btnRef={anchor("highlight")} label="Highlight (Ctrl+Shift+H)" on={is("highlight") || pop === "highlight"} onClick={() => toggle("highlight")}>
+        <Icon name="highlight" size={20} />
+      </ToolBtn>
+      <ToolBtn btnRef={anchor("heading")} label="Headings" on={is("heading") || pop === "heading"} onClick={() => toggle("heading")}>
+        <HeadingGlyph />
+      </ToolBtn>
+      <ToolBtn label="Label tag (Ctrl+Shift+L)" on={is("labelTag")} optional onClick={() => run((e) => e.chain().focus().toggleLabelTag().run())}>
+        <TagGlyph />
+      </ToolBtn>
+      <ToolBtn btnRef={anchor("box")} label="Boxes" on={is("dashedBox") || is("greyBox") || pop === "box"} onClick={() => toggle("box")}>
+        {is("greyBox") ? <GreyBoxGlyph /> : <DashedBoxGlyph />}
+      </ToolBtn>
+      <ToolBtn btnRef={anchor("list")} label="Lists" on={is("bulletList") || is("orderedList") || is("taskList") || pop === "list"} onClick={() => toggle("list")}>
+        <Icon name={listIcon} size={20} />
+      </ToolBtn>
+      <span className="tool-sep" />
+      <ToolBtn label="Sticky note (Ctrl+Shift+N)" onClick={onAddSticky}>
+        <StickyGlyph />
+      </ToolBtn>
+      <ToolBtn label="Import picture (or paste with Ctrl+V)" onClick={onImport}>
+        <Icon name="image" size={20} />
+      </ToolBtn>
+      <ToolBtn btnRef={anchor("more")} label="More: font, size, align, stickers, paper, export" on={pop === "more"} onClick={() => toggle("more")}>
+        <Icon name="more" size={20} stroke={2.4} />
+      </ToolBtn>
+        </>
+      ) : (
+        <>
       <button
         ref={anchor("font")}
         className={`tool tool--font ${pop === "font" ? "tool--on" : ""}`}
@@ -172,43 +270,7 @@ export function Toolbar({
         <u className="glyph-u">U</u>
       </ToolBtn>
       <span className="tool-sep" />
-      <div className="inks" role="group" aria-label="Ink colour">
-        {INKS.map((ink, i) => {
-          const on = i === 0 ? !color : color?.toLowerCase() === ink.color.toLowerCase();
-          return (
-            <button
-              key={ink.id}
-              className={`ink ${on ? "ink--on" : ""}`}
-              style={{ background: ink.color }}
-              aria-label={`${ink.name} ink (Ctrl+${i + 1})`}
-              aria-pressed={on}
-              title={`${ink.name} ink · Ctrl+${i + 1}`}
-              onClick={() =>
-                run((e) =>
-                  i === 0 ? e.chain().focus().unsetColor().run() : e.chain().focus().setColor(ink.color).run(),
-                )
-              }
-            />
-          );
-        })}
-        <button
-          className={`ink ink--custom ${color && !INKS.some((k) => k.color.toLowerCase() === color.toLowerCase()) ? "ink--on" : ""}`}
-          aria-label="Custom ink colour"
-          title="Custom ink colour"
-          onClick={() => colorInput.current?.click()}
-        >
-          <span>+</span>
-        </button>
-        <input
-          ref={colorInput}
-          type="color"
-          className="visually-hidden"
-          tabIndex={-1}
-          aria-hidden
-          defaultValue="#C2410C"
-          onChange={(ev) => run((e) => e.chain().focus().setColor(ev.target.value).run())}
-        />
-      </div>
+      {inkGroup()}
       <span className="tool-sep" />
       <ToolBtn btnRef={anchor("highlight")} label="Highlight (Ctrl+Shift+H)" on={is("highlight") || pop === "highlight"} onClick={() => toggle("highlight")}>
         <Icon name="highlight" size={20} />
@@ -250,9 +312,72 @@ export function Toolbar({
       >
         <Icon name="more" size={20} stroke={2.4} />
       </button>
+        </>
+      )}
+
+      {pop === "ink" && (
+        <Popover anchor={anchors.current.ink ?? null} onClose={close}>
+          <p className="pop__label">Ink</p>
+          {inkGroup(close)}
+        </Popover>
+      )}
+
+      {pop === "more" && (
+        <Popover anchor={anchors.current.more ?? null} onClose={close} className="pop-more">
+          <p className="pop__label">Text</p>
+          <button className="pop-row" style={{ fontFamily: currentFont.css, fontSize: 17 }} onClick={() => setPop("font")}>
+            {currentFont.name.replace(" (system)", "")}
+            <span className="pop-row__hint">
+              <Icon name="chevronRight" size={14} stroke={2.4} />
+            </span>
+          </button>
+          <div className="more-row">
+            <div className="tool-size">
+              <button className="tool tool--slim" aria-label="Smaller text" title="Smaller text" onClick={() => setSize(size - 2)}>
+                −
+              </button>
+              <span className="tool-size__n" title="Text size">
+                {size}
+              </span>
+              <button className="tool tool--slim" aria-label="Bigger text" title="Bigger text" onClick={() => setSize(size + 2)}>
+                +
+              </button>
+            </div>
+            <span className="tool-sep" />
+            {(["left", "center", "right"] as const).map((a) => (
+              <button
+                key={a}
+                className={`tool ${alignIcon === "align" + a[0].toUpperCase() + a.slice(1) ? "tool--on" : ""}`}
+                aria-label={`Align ${a}`}
+                title={`Align ${a}`}
+                onClick={() => run((e) => e.chain().focus().setTextAlign(a).run())}
+              >
+                <Icon name={a === "left" ? "alignLeft" : a === "center" ? "alignCenter" : "alignRight"} size={18} />
+              </button>
+            ))}
+          </div>
+          <div className="pop__rule" />
+          <button className="pop-row" onClick={() => setPop("sticker")}>
+            <KidGlyph size={20} /> Stickers
+          </button>
+          <button className="pop-row" onClick={() => setPop("page")}>
+            <Icon name="page" size={18} /> Paper &amp; page type
+          </button>
+          <button
+            className="pop-row"
+            onClick={() => {
+              const r = anchors.current.more?.getBoundingClientRect();
+              close();
+              if (r) onMore(r);
+            }}
+          >
+            <Icon name="more" size={18} stroke={2.4} /> New page, export…
+          </button>
+        </Popover>
+      )}
 
       {pop === "font" && (
-        <Popover anchor={anchors.current.font ?? null} onClose={close} className="pop-fonts">
+        <Popover anchor={anchorFor("font")} onClose={close} className="pop-fonts">
           <p className="pop__label">Font</p>
           {FONTS.map((f) => {
             const on = f.id === currentFont.id;
@@ -377,7 +502,7 @@ export function Toolbar({
       )}
 
       {pop === "align" && (
-        <Popover anchor={anchors.current.align ?? null} onClose={close}>
+        <Popover anchor={anchorFor("align")} onClose={close}>
           <p className="pop__label">Align</p>
           <div className="row gap-6">
             {(["left", "center", "right"] as const).map((a) => (
@@ -399,7 +524,7 @@ export function Toolbar({
       )}
 
       {pop === "sticker" && (
-        <Popover anchor={anchors.current.sticker ?? null} onClose={close}>
+        <Popover anchor={anchorFor("sticker")} onClose={close}>
           <p className="pop__label">Stickers</p>
           <div className="sticker-grid">
             {STICKERS.map((s) => (
@@ -421,7 +546,7 @@ export function Toolbar({
       )}
 
       {pop === "page" && (
-        <Popover anchor={anchors.current.page ?? null} onClose={close} className="pop-page">
+        <Popover anchor={anchorFor("page")} onClose={close} className="pop-page">
           <p className="pop__label">Paper</p>
           <div className="seg">
             {PAPERS.map((p) => (

@@ -194,7 +194,7 @@ export function SettingsSheet({
         <div className="setting setting--last">
           <div>
             <p className="setting__title">About Nubby</p>
-            <p className="setting__sub">Version 0.1.1 · free, local and offline · no accounts, no tracking.</p>
+            <p className="setting__sub">Version 0.1.2 · free, local and offline · no accounts, no tracking.</p>
           </div>
           <img src="/nubby-mark-96.png" alt="" width={44} height={44} />
         </div>
@@ -226,6 +226,7 @@ const SHORTCUTS: [string, string][] = [
   ["Click its corner", "Fold a sticky up to see under it"],
   ["Double-click", "Open a folded sticky again"],
   ["Ctrl N", "New page"],
+  ["Ctrl Shift M", "Pop the page out into a mini window, and back"],
   ["Alt ← / →", "Turn the page"],
   ["Ctrl K", "Search every page"],
   ["Ctrl P", "Save page as PDF"],

@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import type { Editor } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
 import { toPng } from "html-to-image";
 import { PAGE_TYPES, PAPERS, fontById, paperBackground } from "../lib/catalog";
-import { revealInFolder } from "../lib/platform";
+import { revealInFolder, windowControls } from "../lib/platform";
 import {
   assetUrl,
   blankPage,
@@ -78,6 +78,11 @@ export function NotebookView({
   goPage,
   onBack,
   onEditNotebook,
+  mini = false,
+  onPopOut,
+  onPopIn,
+  onTop = true,
+  onToggleOnTop,
 }: {
   notebook: Notebook;
   pageId: string | null;
@@ -86,6 +91,12 @@ export function NotebookView({
   goPage: (pageId: string) => void;
   onBack: () => void;
   onEditNotebook: () => void;
+  /** Page-only pop-out window: no side columns, page scaled to fit, compact tools. */
+  mini?: boolean;
+  onPopOut?: () => void;
+  onPopIn?: () => void;
+  onTop?: boolean;
+  onToggleOnTop?: () => void;
 }) {
   const currentId =
     pageId && notebook.pages.includes(pageId)
@@ -112,6 +123,22 @@ export function NotebookView({
   const metaTimer = useRef<number | undefined>(undefined);
   const dirty = useRef(false);
   const stickyColor = useRef<StickyItem["color"]>("yellow");
+
+  // In the mini window the whole page is scaled to fit the window's width.
+  const [zoom, setZoom] = useState(1);
+  const z = mini ? zoom : 1;
+  useLayoutEffect(() => {
+    const el = deskRef.current;
+    if (!mini || !el) {
+      setZoom(1);
+      return;
+    }
+    const fit = () => setZoom(Math.round(clamp((el.clientWidth - 24) / PAGE_W, 0.3, 1.25) * 1000) / 1000);
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [mini]);
 
   const font = fontById(notebook.font);
   const baseSize = Math.round(BASE_SIZE * font.scale);
@@ -173,6 +200,7 @@ export function NotebookView({
   useEffect(() => {
     let alive = true;
     setSelectedId(null);
+    setFocusId(null); // "type into the new sticky" is a one-off, not for every later visit
     loadPage(notebook.id, currentId).then((p) => {
       if (!alive) return;
       pageRef.current = p;
@@ -329,7 +357,7 @@ export function NotebookView({
     const r = pg.getBoundingClientRect();
     const top = Math.max(d.top, r.top);
     const bottom = Math.min(d.bottom - 90, r.bottom);
-    return { x: PAGE_W / 2, y: Math.max(120, (top + bottom) / 2 - r.top) };
+    return { x: PAGE_W / 2, y: Math.max(120, ((top + bottom) / 2 - r.top) / z) };
   };
 
   /**
@@ -346,7 +374,7 @@ export function NotebookView({
         const d = desk.getBoundingClientRect();
         const r = pg.getBoundingClientRect();
         if (caret.bottom > d.top + 40 && caret.bottom < d.bottom - 160) {
-          return { x: PAGE_W / 2, y: caret.bottom - r.top + 12, anchor: "top" };
+          return { x: PAGE_W / 2, y: (caret.bottom - r.top) / z + 12, anchor: "top" };
         }
       } catch {
         /* fall through */
@@ -520,7 +548,7 @@ export function NotebookView({
       const top = el.getBoundingClientRect().top;
       let bottom = 0;
       el.querySelectorAll(".nb-prose > *, .item").forEach((n) => {
-        bottom = Math.max(bottom, (n as HTMLElement).getBoundingClientRect().bottom - top);
+        bottom = Math.max(bottom, ((n as HTMLElement).getBoundingClientRect().bottom - top) / z);
       });
       const height = Math.round(Math.min(el.offsetHeight, Math.max(560, bottom + 72)));
       const dataUrl = await toPng(el, {
@@ -609,6 +637,9 @@ export function NotebookView({
       x,
       y,
       items: [
+        mini
+          ? { label: "Back to full Nubby", icon: "popIn", hint: "Ctrl+Shift+M", onClick: () => onPopIn?.() }
+          : { label: "Pop out page (mini window)", icon: "popOut", hint: "Ctrl+Shift+M", onClick: () => onPopOut?.() },
         { label: "New page", icon: "plus", hint: "Ctrl+N", onClick: addPage },
         ...(withExport
           ? [
@@ -622,8 +653,57 @@ export function NotebookView({
     });
 
   return (
-    <div className={`desk ${night ? "desk--night" : ""}`}>
+    <div className={`desk ${night ? "desk--night" : ""} ${mini ? "desk--mini" : ""}`}>
+      {mini && (
+        <div
+          className="mini-bar"
+          onMouseDown={(e) => {
+            if (e.button !== 0 || (e.target as HTMLElement).closest("button")) return;
+            if (e.detail === 2) void windowControls.toggleMaximize();
+            else void windowControls.startDragging();
+          }}
+        >
+          <button className="mini-btn" aria-label="Previous page" title="Previous page (Alt+←)" disabled={idx <= 0} onClick={prev}>
+            <Icon name="chevronLeft" size={16} stroke={2.4} />
+          </button>
+          <button
+            className="mini-btn"
+            aria-label={idx >= notebook.pages.length - 1 ? "New page" : "Next page"}
+            title={idx >= notebook.pages.length - 1 ? "New page (Ctrl+N)" : "Next page (Alt+→)"}
+            onClick={next}
+          >
+            <Icon name={idx >= notebook.pages.length - 1 ? "plus" : "chevronRight"} size={16} stroke={2.4} />
+          </button>
+          <div className="mini-bar__title" title={`${notebook.title} · page ${idx + 1} of ${notebook.pages.length}`}>
+            <b>{notebook.title}</b> · {idx + 1}/{notebook.pages.length}
+          </div>
+          <button
+            className={`mini-btn ${onTop ? "mini-btn--on" : ""}`}
+            aria-pressed={onTop}
+            aria-label="Keep on top of other windows"
+            title={onTop ? "Staying on top of other windows (click to let them cover it)" : "Keep on top of other windows"}
+            onClick={onToggleOnTop}
+          >
+            <Icon name="pin" size={16} />
+          </button>
+          <button className="mini-btn mini-btn--full" title="Back to full Nubby (Ctrl+Shift+M)" onClick={onPopIn}>
+            <Icon name="popIn" size={15} stroke={2.2} />
+            <span>Full</span>
+          </button>
+          {isTauri && (
+            <div className="winctl winctl--mini">
+              <button aria-label="Minimise" onClick={() => windowControls.minimize()}>
+                <Icon name="minimize" size={13} stroke={1.5} />
+              </button>
+              <button className="winctl__close" aria-label="Close" onClick={() => windowControls.close()}>
+                <Icon name="x" size={13} stroke={1.5} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
       <div className="desk-scroll" ref={deskRef}>
+        {!mini && (
         <aside className="pages-col" aria-label="Pages">
           <button className="crumb" onClick={onBack}>
             <Icon name="chevronLeft" size={14} stroke={2.4} /> Shelf
@@ -675,8 +755,10 @@ export function NotebookView({
             </button>
           </div>
         </aside>
+        )}
 
         <div className="stage">
+          {!mini && (
           <div className="turns" style={{ width: PAGE_W }}>
             <button className="turn turn--prev" aria-label="Previous page" disabled={idx <= 0} onClick={prev} title="Previous page (Alt+←)">
               <Icon name="chevronLeft" size={18} stroke={2.6} />
@@ -690,7 +772,8 @@ export function NotebookView({
               <Icon name={idx >= notebook.pages.length - 1 ? "plus" : "chevronRight"} size={18} stroke={2.6} />
             </button>
           </div>
-          <div className="stack" style={{ width: PAGE_W }}>
+          )}
+          <div className="stack" style={{ width: PAGE_W, zoom: mini ? zoom : undefined }}>
             <div className="stack__under stack__under--2" />
             <div className="stack__under stack__under--1" />
             <div
@@ -724,7 +807,7 @@ export function NotebookView({
                 e.preventDefault();
                 e.stopPropagation();
                 const r = e.currentTarget.getBoundingClientRect();
-                void addImages(files, "Dropped in ✓", { x: e.clientX - r.left, y: e.clientY - r.top, anchor: "center" });
+                void addImages(files, "Dropped in ✓", { x: (e.clientX - r.left) / z, y: (e.clientY - r.top) / z, anchor: "center" });
               }}
             >
               <div className="paper-grain nb-noexport" aria-hidden />
@@ -743,6 +826,7 @@ export function NotebookView({
                   assetDir={assetsDir}
                   width={PAGE_W}
                   margin={MARGIN}
+                  scale={z}
                   selectedId={selectedId}
                   focusId={focusId}
                   onSelect={(id) => {
@@ -761,6 +845,7 @@ export function NotebookView({
           </div>
         </div>
 
+        {!mini && (
         <aside className="side-col" aria-label="Page settings">
           <div className="side-col__group">
             <span className="side-col__label">Paper</span>
@@ -797,6 +882,7 @@ export function NotebookView({
             Paste a picture anywhere with Ctrl V.
           </p>
         </aside>
+        )}
       </div>
 
       <Toolbar
@@ -811,6 +897,7 @@ export function NotebookView({
         onAddSticky={addSticky}
         onImport={() => fileInput.current?.click()}
         onMore={(r) => moreMenu(r.left, r.top - 8, true)}
+        compact={mini}
       />
 
       <input

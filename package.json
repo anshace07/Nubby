@@ -1,7 +1,7 @@
 {
   "name": "nubby",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Nubby — a paper notebook for typed notes. Free, local, offline.",
   "type": "module",
   "scripts": {

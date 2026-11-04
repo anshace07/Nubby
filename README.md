@@ -15,6 +15,7 @@ Notebooks felt lifeless, so I made one that doesn't. Nubby looks and feels like 
 - **Study-note styles** — a big title with a marker swipe, `#HEADING:` on a peach pill, subheadings with a wavy line, the tilted green **L.P.** tag, dashed boxes for Q&A, grey boxes, bullets, numbers, checklists and little stickers.
 - **Pictures anywhere** — paste with Ctrl+V, drag a file in, or Import. Thin black border; drag, resize and snap them anywhere on the page.
 - **Sticky notes** — yellow, pink, mint or blue paper notes, slightly tilted, anywhere on a page. Click a note's curled corner and it folds up into its glued strip (in 3D) so you can read what's underneath; double-click the strip to open it again. Plus a loose sticky board.
+- **Pop-out mini window** — one click (or Ctrl+Shift+M) shrinks Nubby to just the page, in a small window that can stay on top of everything else. Keep it beside a lecture video or an article and take notes as you go; one click brings the full app back.
 - **Search every page** with Ctrl+K.
 - **Export** a page as PDF or PNG.
 - **Night desk** — the room goes dark, the paper stays paper.
@@ -65,6 +66,7 @@ Back up that folder and you've backed up everything.
 | Ctrl Shift I | Import a picture |
 | Ctrl Shift N | New sticky note (click its corner to fold it away) |
 | Ctrl N | New page |
+| Ctrl Shift M | Pop the page out into a mini window, and back |
 | Alt ← / → | Turn the page |
 | Ctrl K | Search every page |
 | Ctrl P / Ctrl Shift E | Save page as PDF / PNG |
