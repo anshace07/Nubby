@@ -46,12 +46,31 @@ jobs:
       - name: Build Nubby (Apple Silicon + Intel)
         run: npm run tauri build -- --target universal-apple-darwin
 
-      - name: Check the app's signature
+      - name: Check the app (signature, Apple Silicon + Intel, macOS version)
         run: |
           APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Nubby.app"
+          DMG=$(ls src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg)
           codesign --verify --deep --strict --verbose=2 "$APP"
-          for bin in "$APP"/Contents/MacOS/*; do echo "$(basename "$bin"): $(lipo -archs "$bin")"; done
-          /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$APP/Contents/Info.plist"
+          SIG=$(codesign -dv "$APP" 2>&1 | grep -E "^(Signature|Identifier|Format)" | tr '\n' ' ')
+          ARCHS=$(for bin in "$APP"/Contents/MacOS/*; do printf "%s: %s " "$(basename "$bin")" "$(lipo -archs "$bin")"; done)
+          MINOS=$(/usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$APP/Contents/Info.plist")
+          DOCS=$(/usr/libexec/PlistBuddy -c "Print :NSDocumentsFolderUsageDescription" "$APP/Contents/Info.plist")
+          echo "::notice title=Nubby.app::${ARCHS}| macOS ${MINOS}+ | ${SIG}"
+          echo "::notice title=Nubby.dmg::$(basename "$DMG") $(du -h "$DMG" | cut -f1) sha256 $(shasum -a 256 "$DMG" | cut -d' ' -f1)"
+          echo "::notice title=Documents prompt::${DOCS}"
+
+      - name: Smoke test (does Nubby start on a Mac?)
+        run: |
+          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Nubby.app"
+          open "$APP"
+          sleep 20
+          if pgrep -f "Nubby.app/Contents/MacOS/" > /dev/null; then
+            echo "::notice title=Smoke test::Nubby opened and was still running after 20 s"
+          else
+            echo "::error title=Smoke test::Nubby quit within 20 s of opening"
+            exit 1
+          fi
+          pkill -f "Nubby.app/Contents/MacOS/" || true
 
       - name: Upload the .dmg
         uses: actions/upload-artifact@v4
