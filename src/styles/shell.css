@@ -1185,3 +1185,11 @@ button.list-row:hover {
     display: none;
   }
 }
+
+/* ---------- Mac desktop: the red/yellow/green window buttons sit top-left ---------- */
+.mac-desktop .titlebar {
+  padding-left: 84px;
+}
+.mac-desktop .mini-bar {
+  padding-left: 80px;
+}

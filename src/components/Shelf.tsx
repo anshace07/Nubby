@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import type { Notebook } from "../lib/types";
+import { FILE_APP } from "../lib/platform";
 import { timeAgo } from "../lib/util";
 import { Cover } from "./Cover";
 import { Icon } from "./Icon";
@@ -116,7 +117,7 @@ export function Shelf({
         <header className="shelf-head">
           <h1 className="h-ui">Notebooks</h1>
           <div className="row gap-12">
-            <button className="btn" onClick={onOpenFolder} title="Open the Nubby folder in File Explorer">
+            <button className="btn" onClick={onOpenFolder} title={`Open the Nubby folder in ${FILE_APP}`}>
               <Icon name="folder" size={17} /> Open folder
             </button>
             <button className="btn btn--primary" onClick={onNew}>

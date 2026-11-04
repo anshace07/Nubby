@@ -12,6 +12,7 @@ import {
   TagGlyph,
 } from "./Icon";
 import { Popover } from "./Menu";
+import { keys } from "../lib/platform";
 
 export const STICKERS = [
   { src: "/stickers/kid.svg", name: "Kid in sunglasses" },
@@ -54,9 +55,9 @@ function ToolBtn({
     <button
       ref={btnRef}
       className={`tool ${on ? "tool--on" : ""} ${optional ? "tool--opt" : ""}`}
-      aria-label={label}
+      aria-label={keys(label)}
       aria-pressed={on}
-      title={label}
+      title={keys(label)}
       disabled={disabled}
       onClick={onClick}
     >
@@ -148,9 +149,9 @@ export function Toolbar({
             key={ink.id}
             className={`ink ${on ? "ink--on" : ""}`}
             style={{ background: ink.color }}
-            aria-label={`${ink.name} ink (Ctrl+${i + 1})`}
+            aria-label={keys(`${ink.name} ink (Ctrl+${i + 1})`)}
             aria-pressed={on}
-            title={`${ink.name} ink · Ctrl+${i + 1}`}
+            title={keys(`${ink.name} ink · Ctrl+${i + 1}`)}
             onClick={() => {
               run((e) =>
                 i === 0 ? e.chain().focus().unsetColor().run() : e.chain().focus().setColor(ink.color).run(),
@@ -195,7 +196,7 @@ export function Toolbar({
         ref={anchor("ink")}
         className={`tool tool--ink ${pop === "ink" ? "tool--on" : ""}`}
         aria-label="Ink colour"
-        title="Ink colour (Ctrl+1 … 5)"
+        title={keys("Ink colour (Ctrl+1 … 5)")}
         onClick={() => toggle("ink")}
       >
         <span className="tool-ink" style={{ background: color ?? INKS[0].color }} />
@@ -467,7 +468,7 @@ export function Toolbar({
                   </span>
                 </span>
                 <span className="hd-row__name">{h.name}</span>
-                <span className="pop-row__hint">{h.hint}</span>
+                <span className="pop-row__hint">{keys(h.hint)}</span>
               </button>
             );
           })}
@@ -496,7 +497,7 @@ export function Toolbar({
             <Icon name="numbers" size={18} /> Numbered <span className="pop-row__hint">type 1. and space</span>
           </button>
           <button className={`pop-row ${is("taskList") ? "pop-row--on" : ""}`} onClick={() => { run((e) => e.chain().focus().toggleTaskList().run()); close(); }}>
-            <Icon name="checklist" size={18} /> Checklist <span className="pop-row__hint">Ctrl+Shift+9</span>
+            <Icon name="checklist" size={18} /> Checklist <span className="pop-row__hint">{keys("Ctrl+Shift+9")}</span>
           </button>
         </Popover>
       )}

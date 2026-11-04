@@ -1,0 +1,68 @@
+name: Build macOS app
+
+# Builds Nubby for Mac on a real Mac: one .dmg that runs on Apple Silicon and
+# Intel Macs (macOS 11 or newer). Runs on every push to main, for pull requests,
+# for version tags and on demand; the .dmg is kept on the run page under
+# Artifacts. For a version tag (v0.1.3 …) it is also attached to that tag's
+# GitHub Release, next to the Windows setup.
+#
+# The app is ad-hoc signed (no paid Apple developer account), so the first time
+# someone opens it macOS asks them to allow it in Privacy & Security.
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: macos-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./src-tauri -> target"
+
+      - name: Install JavaScript dependencies
+        run: npm ci
+
+      - name: Build Nubby (Apple Silicon + Intel)
+        run: npm run tauri build -- --target universal-apple-darwin
+
+      - name: Check the app's signature
+        run: |
+          APP="src-tauri/target/universal-apple-darwin/release/bundle/macos/Nubby.app"
+          codesign --verify --deep --strict --verbose=2 "$APP"
+          for bin in "$APP"/Contents/MacOS/*; do echo "$(basename "$bin"): $(lipo -archs "$bin")"; done
+          /usr/libexec/PlistBuddy -c "Print :LSMinimumSystemVersion" "$APP/Contents/Info.plist"
+
+      - name: Upload the .dmg
+        uses: actions/upload-artifact@v4
+        with:
+          name: nubby-macos
+          if-no-files-found: error
+          path: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+
+      - name: Attach the .dmg to the release (version tags only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: src-tauri/target/universal-apple-darwin/release/bundle/dmg/*.dmg
+          fail_on_unmatched_files: true
