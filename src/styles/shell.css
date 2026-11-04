@@ -1193,3 +1193,7 @@ button.list-row:hover {
 .mac-desktop .mini-bar {
   padding-left: 80px;
 }
+/* macOS thickens text by default; this keeps the handwriting as light as on Windows */
+.mac-desktop body {
+  -webkit-font-smoothing: antialiased;
+}
