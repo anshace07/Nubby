@@ -25,6 +25,11 @@ import "./styles/night.css";
 import "./styles/print.css";
 
 import App from "./App";
+import { isMac } from "./lib/platform";
+import { isTauri } from "./lib/storage";
+
+// The Mac desktop app keeps its red/yellow/green window buttons over the top-left corner.
+if (isMac && isTauri) document.documentElement.classList.add("mac-desktop");
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

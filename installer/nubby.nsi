@@ -14,7 +14,7 @@ SetCompressor /SOLID lzma
 RequestExecutionLevel user
 
 !define APP "Nubby"
-!define VERSION "0.1.2"
+!define VERSION "0.1.3"
 !define PUBLISHER "Ayush Mishra"
 !define APPID "com.ayushmishra.nubby"
 !define UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPID}"

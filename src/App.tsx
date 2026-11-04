@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { Toasts } from "./components/Toasts";
 import { BoardView, RecentView, TrashView } from "./components/Views";
-import { miniWindow, revealInFolder, windowControls } from "./lib/platform";
+import { FILE_APP, miniWindow, revealInFolder, windowControls } from "./lib/platform";
 import {
   createNotebook,
   deleteNotebookForever,
@@ -209,7 +209,7 @@ export default function App() {
     try {
       await revealInFolder(await storageRoot());
     } catch {
-      toast({ text: "Couldn't open File Explorer", kind: "error" });
+      toast({ text: `Couldn't open ${FILE_APP}`, kind: "error" });
     }
   };
 

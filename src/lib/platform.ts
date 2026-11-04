@@ -4,6 +4,39 @@ import { isTauri } from "./storage";
 
 const appWindow = isTauri ? getCurrentWindow() : null;
 
+/* ------------------------------ Mac or Windows ------------------------------ */
+
+/** True on a Mac (where the desktop app draws its pages with Safari's engine). */
+export const isMac = typeof navigator !== "undefined" && /Macintosh|Mac OS X/.test(navigator.userAgent);
+
+const MAC_KEY: Record<string, string> = { Ctrl: "⌘", Alt: "⌥", Shift: "⇧" };
+
+/**
+ * Shortcut text for this computer. Shortcuts are written the Windows way
+ * ("Ctrl+Shift+N", "Ctrl Alt 0", "Ctrl click"); on a Mac they read "⇧⌘N",
+ * "⌥⌘0", "⌘-click". The keys themselves already work with ⌘ on a Mac.
+ */
+export function keys(text: string): string {
+  if (!isMac) return text;
+  return text
+    .replace(/Ctrl[+ ]click/g, "⌘-click")
+    .replace(/\b((?:(?:Ctrl|Alt|Shift)[+ ])+)/g, (run) => {
+      const mods = run.split(/[+ ]/).filter(Boolean);
+      return ["Alt", "Shift", "Ctrl"].filter((m) => mods.includes(m)).map((m) => MAC_KEY[m]).join("");
+    });
+}
+
+/** Turning pages: Alt+arrow on Windows. On a Mac Option+arrow jumps between words, so it's ⌥⌘+arrow. */
+export const TURN = isMac
+  ? { prev: "⌥⌘←", next: "⌥⌘→", both: "⌥⌘ ← / →" }
+  : { prev: "Alt+←", next: "Alt+→", both: "Alt ← / →" };
+
+/** The app that shows files: File Explorer on Windows, Finder on a Mac. */
+export const FILE_APP = isMac ? "Finder" : "File Explorer";
+
+/** "Documents\Nubby\Exports" on Windows, "Documents/Nubby/Exports" on a Mac. */
+export const notesPath = (...parts: string[]) => ["Documents", "Nubby", ...parts].join(isMac ? "/" : "\\");
+
 export const windowControls = {
   minimize: () => appWindow?.minimize(),
   toggleMaximize: () => appWindow?.toggleMaximize(),
@@ -123,7 +156,7 @@ export async function openExternal(url: string) {
   }
 }
 
-/** Opens File Explorer with the given file or folder selected. */
+/** Opens File Explorer (Finder on a Mac) with the given file or folder selected. */
 export async function revealInFolder(absPath: string) {
   if (!isTauri) return;
   const { revealItemInDir } = await import("@tauri-apps/plugin-opener");

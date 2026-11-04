@@ -1,5 +1,5 @@
 import { useEffect, useState, type MouseEvent } from "react";
-import { windowControls } from "../lib/platform";
+import { isMac, keys, windowControls } from "../lib/platform";
 import { isTauri } from "../lib/storage";
 import { Icon } from "./Icon";
 
@@ -37,7 +37,7 @@ export function TitleBar({
 
   return (
     <div className="titlebar" onMouseDown={onMouseDown}>
-      <button className="tb-btn" aria-label="Toggle sidebar" title="Toggle sidebar (Ctrl+\)" onClick={onToggleSidebar}>
+      <button className="tb-btn" aria-label="Toggle sidebar" title={keys("Toggle sidebar (Ctrl+\\)")} onClick={onToggleSidebar}>
         <Icon name="sidebar" size={18} />
       </button>
       <div className="titlebar__save" aria-live="polite">
@@ -45,7 +45,7 @@ export function TitleBar({
       </div>
       <div className="titlebar__right">
         {onPopOut && (
-          <button className="tb-pill" title="Pop the page out into a small window you can keep beside a video (Ctrl+Shift+M)" onClick={onPopOut}>
+          <button className="tb-pill" title={keys("Pop the page out into a small window you can keep beside a video (Ctrl+Shift+M)")} onClick={onPopOut}>
             <Icon name="popOut" size={15} stroke={2} />
             Pop out
           </button>
@@ -58,7 +58,7 @@ export function TitleBar({
         >
           <Icon name={night ? "sun" : "moon"} size={18} />
         </button>
-        {isTauri && (
+        {isTauri && !isMac && (
           <div className="winctl">
             <button aria-label="Minimise" onClick={() => windowControls.minimize()}>
               <Icon name="minimize" size={14} stroke={1.5} />
