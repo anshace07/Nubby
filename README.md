@@ -80,9 +80,9 @@ npm run tauri dev     # run Nubby with hot reload
 npm run tauri build   # installers land in src-tauri/target/release/bundle/
 ```
 
-Every push to `main` builds the Windows installers on GitHub Actions (`.github/workflows/build-windows.yml`). Pushing a tag like `v0.1.1` also drafts a GitHub Release with them attached.
+Every push to `main` builds Nubby on Windows with GitHub Actions (`.github/workflows/build-windows.yml`) as a check; the installers it makes are on each run's page under Artifacts.
 
-`installer/nubby.nsi` and `scripts/cross-build-windows.sh` are how the first build was made on Linux, without a Windows machine.
+The setup on the [Releases](../../releases) page is made with `installer/nubby.nsi` — a small per-user installer that updates Nubby in place and never touches your notes. `scripts/cross-build-windows.sh` builds it on Linux, without a Windows machine.
 
 ## How it's built
 
