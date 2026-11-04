@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "What Nubby's main window is allowed to do: its own window controls and opening links / folders.",
+  "description": "What Nubby's main window is allowed to do: its own window controls (including the pop-out mini window) and opening links / folders.",
   "windows": ["main"],
   "permissions": [
     "core:default",
@@ -9,6 +9,13 @@
     "core:window:allow-minimize",
     "core:window:allow-toggle-maximize",
     "core:window:allow-is-maximized",
+    "core:window:allow-maximize",
+    "core:window:allow-unmaximize",
+    "core:window:allow-set-size",
+    "core:window:allow-set-min-size",
+    "core:window:allow-set-position",
+    "core:window:allow-set-always-on-top",
+    "core:window:allow-center",
     "core:window:allow-close",
     "core:window:allow-destroy",
     "opener:default"

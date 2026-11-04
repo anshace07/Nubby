@@ -8,11 +8,14 @@ export function TitleBar({
   night,
   onToggleNight,
   onToggleSidebar,
+  onPopOut,
   saveState,
 }: {
   night: boolean;
   onToggleNight: () => void;
   onToggleSidebar: () => void;
+  /** Shown while a notebook is open: shrink to the page-only mini window. */
+  onPopOut?: () => void;
   saveState: "saved" | "saving" | "error";
 }) {
   const [maximized, setMaximized] = useState(false);
@@ -41,6 +44,12 @@ export function TitleBar({
         {saveState === "saving" ? "Saving…" : saveState === "error" ? "Couldn't save — retrying" : ""}
       </div>
       <div className="titlebar__right">
+        {onPopOut && (
+          <button className="tb-pill" title="Pop the page out into a small window you can keep beside a video (Ctrl+Shift+M)" onClick={onPopOut}>
+            <Icon name="popOut" size={15} stroke={2} />
+            Pop out
+          </button>
+        )}
         <button
           className="tb-btn"
           aria-label={night ? "Switch to day desk" : "Switch to night desk"}

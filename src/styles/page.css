@@ -1224,3 +1224,56 @@
 .pop-page {
   width: 330px;
 }
+
+/* ============================ pop-out mini window ============================ */
+
+.desk--mini .desk-scroll {
+  top: 40px;
+  display: block;
+}
+.desk--mini .stage {
+  align-items: center;
+  padding: 12px 12px 92px;
+}
+.desk--mini .stack {
+  margin-top: 0;
+}
+.toolbar--compact {
+  bottom: 10px;
+  gap: 1px;
+  height: 52px;
+  max-width: calc(100% - 16px);
+  padding: 0 6px;
+  border-radius: 18px;
+}
+.toolbar--compact .tool {
+  width: 35px;
+  height: 35px;
+  border-radius: 11px;
+}
+.toolbar--compact .tool-sep {
+  margin: 0 3px;
+  height: 22px;
+}
+.tool-ink {
+  width: 21px;
+  height: 21px;
+  border: 2.5px solid var(--panel);
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px var(--outline);
+}
+.more-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 4px 2px;
+}
+.pop-more {
+  width: 268px;
+}
+/* very narrow windows: I, U and the L.P. tag step aside (they all have shortcuts) */
+@media (max-width: 470px) {
+  .toolbar--compact .tool--opt {
+    display: none;
+  }
+}

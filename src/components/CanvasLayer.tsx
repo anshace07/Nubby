@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { STICKY_COLORS } from "../lib/catalog";
 import { assetUrl } from "../lib/repo";
 import type { CanvasItem, StickyColor, StickyItem } from "../lib/types";
@@ -86,6 +86,7 @@ export function CanvasLayer({
   assetDir,
   width,
   margin,
+  scale = 1,
   selectedId,
   focusId,
   onSelect,
@@ -98,6 +99,8 @@ export function CanvasLayer({
   assetDir: string;
   width: number;
   margin: number;
+  /** How much the page is scaled on screen (the mini window shrinks it to fit). */
+  scale?: number;
   selectedId: string | null;
   /** sticky note whose text box should take focus once (just created) */
   focusId: string | null;
@@ -186,9 +189,9 @@ export function CanvasLayer({
     el.setPointerCapture(e.pointerId);
 
     const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - sx;
-      const dy = ev.clientY - sy;
-      if (!moved && Math.abs(dx) + Math.abs(dy) < 4) return;
+      if (!moved && Math.abs(ev.clientX - sx) + Math.abs(ev.clientY - sy) < 4) return;
+      const dx = (ev.clientX - sx) / scale;
+      const dy = (ev.clientY - sy) / scale;
       moved = true;
       let x = orig.x + dx;
       let y = orig.y + dy;
@@ -237,8 +240,8 @@ export function CanvasLayer({
     let last: CanvasItem = orig;
     el.setPointerCapture(e.pointerId);
     const move = (ev: PointerEvent) => {
-      const dx = ev.clientX - sx;
-      const dy = ev.clientY - sy;
+      const dx = (ev.clientX - sx) / scale;
+      const dy = (ev.clientY - sy) / scale;
       const left = corner === "nw" || corner === "sw";
       const top = corner === "nw" || corner === "ne";
       let w = Math.max(minW, orig.w + (left ? -dx : dx));
@@ -272,6 +275,22 @@ export function CanvasLayer({
     replace({ ...item, folded }, true);
   };
 
+  // Undo the page's scaling for the selection chrome so it stays easy to hit.
+  const unzoom = scale !== 1 ? 1 / scale : undefined;
+
+  // Keep the item's tool pill over the page, even for items at the edge of a narrow window.
+  const toolsEl = useRef<HTMLDivElement>(null);
+  const [toolsW, setToolsW] = useState(0);
+  useLayoutEffect(() => {
+    setToolsW(toolsEl.current?.offsetWidth ?? 0);
+  }, [selectedId, selected?.kind, scale, draft === null]);
+  const toolsLeft = (it: CanvasItem) => {
+    const layerW = width * scale;
+    const half = toolsW / 2 + 4;
+    const c = (it.x + it.w / 2) * scale;
+    return layerW <= 2 * half ? layerW / 2 : clamp(c, half, layerW - half);
+  };
+
   const bringFront = (item: CanvasItem) => {
     const maxZ = Math.max(0, ...itemsRef.current.map((i) => i.z));
     replace({ ...item, z: maxZ + 1 }, true);
@@ -299,7 +318,7 @@ export function CanvasLayer({
               onPointerDown={(e) => startMove(e, item)}
             >
               <AssetImage dir={assetDir} name={item.asset} />
-              {isSel && <Handles item={item} onResize={startResize} />}
+              {isSel && <Handles item={item} onResize={startResize} unzoom={unzoom} />}
             </div>
           );
         }
@@ -326,15 +345,21 @@ export function CanvasLayer({
               onText={(text) => replace({ ...item, text }, true)}
               onFold={(folded) => setFolded(item, folded)}
             />
-            {isSel && <Handles item={item} onResize={startResize} resizable={!item.folded} />}
+            {isSel && <Handles item={item} onResize={startResize} resizable={!item.folded} unzoom={unzoom} />}
           </div>
         );
       })}
 
       {selected && !draft && (
         <div
+          ref={toolsEl}
           className="item-tools nb-noexport"
-          style={{ left: selected.x + selected.w / 2, top: Math.max(4, selected.y - 50), zIndex: 100000 }}
+          style={{
+            left: toolsLeft(selected),
+            top: Math.max(4, selected.y * scale - 50),
+            zIndex: 100000,
+            zoom: unzoom,
+          }}
           onPointerDown={(e) => e.stopPropagation()}
         >
           {selected.kind === "sticky" &&
@@ -401,17 +426,20 @@ function Handles({
   item,
   onResize,
   resizable = true,
+  unzoom,
 }: {
   item: CanvasItem;
   onResize: (e: RPointerEvent<HTMLSpanElement>, item: CanvasItem, corner: Corner) => void;
   resizable?: boolean;
+  unzoom?: number;
 }) {
   return (
     <>
-      <span className="item-outline nb-noexport" />
+      <span className="item-outline nb-noexport" style={{ zoom: unzoom }} />
       {resizable && (["nw", "ne", "sw", "se"] as Corner[]).map((c) => (
         <span
           key={c}
+          style={{ zoom: unzoom }}
           className={`item-handle item-handle--${c} nb-noexport`}
           onPointerDown={(e) => onResize(e, item, c)}
         />

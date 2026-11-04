@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { Toasts } from "./components/Toasts";
 import { BoardView, RecentView, TrashView } from "./components/Views";
-import { revealInFolder, windowControls } from "./lib/platform";
+import { miniWindow, revealInFolder, windowControls } from "./lib/platform";
 import {
   createNotebook,
   deleteNotebookForever,
@@ -54,6 +54,10 @@ export default function App() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [tipVisible, setTipVisible] = useState(() => pref("nubby.tip", "on") !== "off");
   const [saveState, setSaveState] = useState<"saved" | "saving" | "error">("saved");
+  // Pop-out mini window: just the page, small and (optionally) on top of other windows.
+  const [mini, setMini] = useState(false);
+  const [onTop, setOnTopState] = useState(() => pref("nubby.mini.onTop", "1") === "1");
+  const miniBusy = useRef(false);
   const nbTimers = useRef(new Map<string, number>());
 
   /* ---------------------------- loading & saving ---------------------------- */
@@ -209,6 +213,43 @@ export default function App() {
     }
   };
 
+  /* ------------------------ pop-out mini window ------------------------ */
+
+  const popOut = async () => {
+    if (mini || miniBusy.current || view.name !== "notebook") return;
+    miniBusy.current = true;
+    setMini(true); // switch the page layout first, then shrink the window
+    try {
+      await miniWindow.enter(onTop);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      miniBusy.current = false;
+    }
+  };
+  const popIn = async () => {
+    if (!mini || miniBusy.current) return;
+    miniBusy.current = true;
+    try {
+      await miniWindow.exit(); // grow the window back first, then bring the full app back
+    } catch (err) {
+      console.error(err);
+    } finally {
+      miniBusy.current = false;
+      setMini(false);
+    }
+  };
+  const toggleOnTop = () => {
+    const next = !onTop;
+    setOnTopState(next);
+    setPref("nubby.mini.onTop", next ? "1" : "0");
+    void miniWindow.setOnTop(next);
+  };
+  // The mini window only ever shows a notebook page.
+  useEffect(() => {
+    if (mini && view.name !== "notebook") void popIn();
+  });
+
   /* ---------------------------- shortcuts ---------------------------- */
 
   const collapsed = view.name === "notebook" ? railInNotebook : railElsewhere;
@@ -234,6 +275,9 @@ export default function App() {
       } else if (mod && !e.shiftKey && e.key.toLowerCase() === "n" && view.name !== "notebook") {
         e.preventDefault();
         setSheet({ mode: "new" });
+      } else if (mod && e.shiftKey && e.key.toLowerCase() === "m" && (mini || view.name === "notebook")) {
+        e.preventDefault();
+        void (mini ? popIn() : popOut());
       } else if (e.key === "F1") {
         e.preventDefault();
         setHelpOpen(true);
@@ -288,6 +332,11 @@ export default function App() {
         goPage={goPage}
         onBack={() => setView({ name: "shelf" })}
         onEditNotebook={() => setSheet({ mode: "edit", id: activeNb.id })}
+        mini={mini}
+        onPopOut={() => void popOut()}
+        onPopIn={() => void popIn()}
+        onTop={onTop}
+        onToggleOnTop={toggleOnTop}
       />
     );
   } else if (view.name === "recent") {
@@ -314,15 +363,18 @@ export default function App() {
   const editing = sheet?.mode === "edit" ? notebooks.find((n) => n.id === sheet.id) : undefined;
 
   return (
-    <div className={`app ${night ? "app--night" : ""}`}>
-      <TitleBar
-        night={night}
-        onToggleNight={() => setNight(!night)}
-        onToggleSidebar={toggleSidebar}
-        saveState={saveState}
-      />
+    <div className={`app ${night ? "app--night" : ""} ${mini ? "app--mini" : ""}`}>
+      {!mini && (
+        <TitleBar
+          night={night}
+          onToggleNight={() => setNight(!night)}
+          onToggleSidebar={toggleSidebar}
+          onPopOut={view.name === "notebook" ? () => void popOut() : undefined}
+          saveState={saveState}
+        />
+      )}
       <div className="app__body">
-        <Sidebar
+        {!mini && <Sidebar
           view={view}
           collapsed={collapsed}
           go={(v) => setView(v)}
@@ -335,7 +387,7 @@ export default function App() {
             setTipVisible(false);
             setPref("nubby.tip", "off");
           }}
-        />
+        />}
         <main className={`sheet ${view.name === "notebook" ? "sheet--desk" : ""}`}>{content}</main>
       </div>
       <Toasts />
