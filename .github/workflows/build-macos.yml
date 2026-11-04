@@ -21,10 +21,10 @@ concurrency:
 
 jobs:
   macos:
-    # An Intel Mac: GitHub's Apple Silicon runners are often short on capacity.
-    # Rust builds the Apple Silicon half as well, so the .dmg runs on both kinds
-    # of Mac. (GitHub keeps this image until August 2027; macos-latest also works.)
-    runs-on: macos-15-intel
+    # GitHub's Mac machines are sometimes all busy; then the job fails with "not
+    # acquired by Runner" without running. Just re-run it later from the Actions
+    # tab. (macos-15-intel works too: the .dmg is built for both kinds of Mac.)
+    runs-on: macos-latest
     permissions:
       contents: write
     steps:
