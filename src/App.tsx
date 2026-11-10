@@ -7,7 +7,7 @@ import { Sidebar } from "./components/Sidebar";
 import { TitleBar } from "./components/TitleBar";
 import { Toasts } from "./components/Toasts";
 import { BoardView, RecentView, TrashView } from "./components/Views";
-import { miniWindow, revealInFolder, windowControls } from "./lib/platform";
+import { FILE_APP, miniWindow, revealInFolder, windowControls } from "./lib/platform";
 import {
   createNotebook,
   deleteNotebookForever,
@@ -45,7 +45,8 @@ export default function App() {
   const [order, setOrder] = useState<string[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [view, setView] = useState<View>({ name: "shelf" });
-  const [night, setNightState] = useState(() => pref("nubby.night", "0") === "1");
+  // The app is always dark since v2; "night" now means the page lies on a dark desk (the default) rather than a cream one.
+  const [night, setNightState] = useState(() => pref("nubby.night", "1") === "1");
   const [railInNotebook, setRailInNotebook] = useState(() => pref("nubby.railNotebook", "1") === "1");
   const [railElsewhere, setRailElsewhere] = useState(() => pref("nubby.railElsewhere", "0") === "1");
   const [sheet, setSheet] = useState<null | { mode: "new" } | { mode: "edit"; id: string }>(null);
@@ -209,7 +210,7 @@ export default function App() {
     try {
       await revealInFolder(await storageRoot());
     } catch {
-      toast({ text: "Couldn't open File Explorer", kind: "error" });
+      toast({ text: `Couldn't open ${FILE_APP}`, kind: "error" });
     }
   };
 

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <!-- Shown once by macOS when Nubby first opens its notes folder. -->
+  <key>NSDocumentsFolderUsageDescription</key>
+  <string>Nubby keeps your notebooks as plain files in Documents/Nubby, on this Mac only.</string>
+</dict>
+</plist>

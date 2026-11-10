@@ -1,113 +1,35 @@
 /* ============================================================
-   Night desk — the room goes dark, the paper stays paper
+   The desk around the page.
+
+   Since v2 the app itself is always dark. The desk switch in the
+   title bar (and in Settings) only changes what the page lies on:
+   a dark desk (the default) or a cream one. The paper never changes.
    ============================================================ */
 
-:root[data-theme="night"] {
-  color-scheme: dark;
-  --frame: #141210;
-  --sheet: #1d1915;
-  --desk: #2b1a10;
-  --soft: #26211b;
-  --panel: #211c17;
-  --btn-bg: #241e17;
-  --hover: rgba(243, 234, 214, 0.08);
-  --line: #3a332a;
-  --line-2: #4a4036;
-  --text: #f3ead6;
-  --muted: #cfc3a9;
-  --muted-2: #6e6656;
-  --outline: #ede3cc;
-  --shadow-c: #000000;
-  --sheet-edge: #3a3128;
-}
-
-.app--night .nav {
-  color: #d8ccb2;
-}
-.app--night .nav--on {
-  border-color: transparent;
-  background: #2a2520;
-  box-shadow: none;
-  color: #f3ead6;
-}
-.app--night .tipcard {
-  border-color: #3a332a;
-  background: #1d1915;
-  box-shadow: none;
-}
-.app--night .input {
-  background: #fbf8f1;
-}
-
-/* walnut desk under a warm lamp */
+/* dark desk */
 .app--night .sheet--desk {
-  background-color: #3a2517;
-  background-image:
-    repeating-linear-gradient(91deg, rgba(0, 0, 0, 0.2) 0 2px, transparent 2px 9px, rgba(255, 205, 160, 0.05) 9px 11px, transparent 11px 26px),
-    repeating-linear-gradient(89deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 47px),
-    linear-gradient(180deg, #43291a, #2b1a10);
+  background: radial-gradient(70% 60% at 50% 32%, #232323 0%, #1b1b1b 58%, #161616 100%);
 }
-.app--night .sheet--desk::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background:
-    radial-gradient(ellipse 70% 75% at 24% -6%, rgba(255, 182, 96, 0.45), rgba(255, 160, 70, 0.14) 45%, rgba(0, 0, 0, 0) 70%),
-    radial-gradient(ellipse 120% 100% at 50% 40%, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.42) 100%);
+
+/* cream desk: things lying on it switch to dark ink */
+.app:not(.app--night) .sheet--desk {
+  background: radial-gradient(70% 60% at 50% 32%, #f2ecdf 0%, #ece5d3 60%, #e4dcc7 100%);
+  --desk-text: #1a1a1a;
+  --desk-muted: #5a5347;
+  --desk-faint: #6e6656;
+  --desk-title: #1a1a1a;
+  --desk-ring: #1a1a1a;
+  --desk-edge: rgba(26, 26, 26, 0.18);
+  --desk-dash: #b9b09c;
+  --desk-hover-edge: #8c8473;
+  --turn-bg: rgba(255, 255, 255, 0.6);
+  --turn-border: rgba(26, 26, 26, 0.12);
+  --turn-c: #5a5347;
+  --turn-hover: #ffffff;
+  --paper-shadow: 0 24px 48px -22px rgba(70, 45, 15, 0.42);
 }
-.app--night .desk {
-  z-index: 1;
-}
-.app--night .stack__under--1 {
-  background: #ded4b8;
-}
-.app--night .stack__under--2 {
-  background: #cfc4a6;
-  box-shadow: 0 30px 60px -10px rgba(0, 0, 0, 0.6);
-}
-.app--night .crumb,
-.app--night .pages-col__meta,
-.app--night .side-col__hint,
-.app--night .thumb {
-  color: #d8ccb2;
-}
-.app--night .thumb--on {
-  color: #f6ebd3;
-}
-.app--night .thumb--on .thumb__paper {
-  border-color: #ede3cc;
-  box-shadow: 2px 2px 0 #000;
-}
-.app--night .pages-col__title {
-  color: #f6ebd3;
-}
-.app--night .tool--on,
-.app--night .tool:hover {
-  background: #3a3128;
-}
-.app--night .ink {
-  border-color: var(--panel);
-  box-shadow: 0 0 0 1.5px #8f846f;
-}
-.app--night .ink--on {
-  box-shadow: 0 0 0 2.5px #ede3cc;
-}
-.app--night .ink--custom {
-  border-color: #ede3cc;
-  box-shadow: none;
-}
-.app--night .hero {
-  border-color: #000;
-  box-shadow: 4px 4px 0 #000;
-}
-.app--night .cover-new {
-  border-color: #6e6656;
-}
-.app--night .board {
-  border-color: #3a332a;
-  filter: brightness(0.85);
-}
-.app--night .winctl .winctl__close:hover {
-  background: #c42b1c;
+.app:not(.app--night) .mini-ptile--on {
+  box-shadow:
+    0 0 0 2px #ece5d3,
+    0 0 0 4px #1a1a1a;
 }

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import type { Notebook } from "../lib/types";
+import { FILE_APP } from "../lib/platform";
 import { timeAgo } from "../lib/util";
 import { Cover } from "./Cover";
 import { Icon } from "./Icon";
 import { Menu, type MenuItem } from "./Menu";
 
 type Sort = "shelf" | "recent" | "az";
-const COVER_W = 146;
-const GAP = 34;
+const COVER_W = 132;
+const GAP = 26;
 
 export function Shelf({
   notebooks,
@@ -116,7 +117,7 @@ export function Shelf({
         <header className="shelf-head">
           <h1 className="h-ui">Notebooks</h1>
           <div className="row gap-12">
-            <button className="btn" onClick={onOpenFolder} title="Open the Nubby folder in File Explorer">
+            <button className="btn" onClick={onOpenFolder} title={`Open the Nubby folder in ${FILE_APP}`}>
               <Icon name="folder" size={17} /> Open folder
             </button>
             <button className="btn btn--primary" onClick={onNew}>
@@ -125,8 +126,8 @@ export function Shelf({
           </div>
         </header>
 
-        <div className="row space-between mt-22">
-          <div className="seg" role="tablist" aria-label="Sort notebooks">
+        <div className="row space-between mt-22 shelf-tabs">
+          <div className="seg seg--tabs" role="tablist" aria-label="Sort notebooks">
             {(
               [
                 ["shelf", "Shelf order"],

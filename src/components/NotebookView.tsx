@@ -3,7 +3,7 @@ import type { Editor } from "@tiptap/react";
 import type { JSONContent } from "@tiptap/core";
 import { toPng } from "html-to-image";
 import { PAGE_TYPES, PAPERS, fontById, paperBackground } from "../lib/catalog";
-import { revealInFolder, windowControls } from "../lib/platform";
+import { TURN, isMac, keys, notesPath, revealInFolder, windowControls } from "../lib/platform";
 import {
   assetUrl,
   blankPage,
@@ -479,9 +479,9 @@ export function NotebookView({
         const url = await assetUrl(assetsDir, item.asset, mimeFromName(item.asset));
         const blob = item.asset.endsWith(".png") ? await (await fetch(url)).blob() : await toPngBlob(url);
         await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-        toast({ text: "Picture copied — paste it anywhere with Ctrl+V" });
+        toast({ text: keys("Picture copied — paste it anywhere with Ctrl+V") });
       } catch {
-        toast({ text: "Copied — paste with Ctrl+V" });
+        toast({ text: keys("Copied — paste with Ctrl+V") });
       }
     } else {
       try {
@@ -560,7 +560,7 @@ export function NotebookView({
       const name = `${safeName(notebook.title)} - page ${idx + 1}.png`;
       if (isTauri) {
         const abs = await writeExport(name, dataUrlToBytes(dataUrl));
-        toast({ text: `Saved “${name}” in Documents\\Nubby\\Exports`, action: { label: "Show", run: () => void revealInFolder(abs) } });
+        toast({ text: `Saved “${name}” in ${notesPath("Exports")}`, action: { label: "Show", run: () => void revealInFolder(abs) } });
       } else {
         const a = document.createElement("a");
         a.href = dataUrl;
@@ -583,10 +583,11 @@ export function NotebookView({
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       const mod = e.ctrlKey || e.metaKey;
-      if ((mod && e.key === "PageDown") || (e.altKey && e.key === "ArrowRight")) {
+      const turn = isMac ? e.altKey && e.metaKey : e.altKey;
+      if ((mod && e.key === "PageDown") || (turn && e.key === "ArrowRight")) {
         e.preventDefault();
         next();
-      } else if ((mod && e.key === "PageUp") || (e.altKey && e.key === "ArrowLeft")) {
+      } else if ((mod && e.key === "PageUp") || (turn && e.key === "ArrowLeft")) {
         e.preventDefault();
         prev();
       } else if (mod && !e.shiftKey && e.key.toLowerCase() === "n") {
@@ -628,8 +629,8 @@ export function NotebookView({
       x,
       y,
       items: [
-        { label: "Save page as PDF…", icon: "print", hint: "Ctrl+P", onClick: exportPdf },
-        { label: "Save page as PNG", icon: "download", hint: "Ctrl+Shift+E", onClick: () => void exportPng() },
+        { label: "Save page as PDF…", icon: "print", hint: keys("Ctrl+P"), onClick: exportPdf },
+        { label: "Save page as PNG", icon: "download", hint: keys("Ctrl+Shift+E"), onClick: () => void exportPng() },
       ],
     });
   const moreMenu = (x: number, y: number, withExport = false) =>
@@ -638,13 +639,13 @@ export function NotebookView({
       y,
       items: [
         mini
-          ? { label: "Back to full Nubby", icon: "popIn", hint: "Ctrl+Shift+M", onClick: () => onPopIn?.() }
-          : { label: "Pop out page (mini window)", icon: "popOut", hint: "Ctrl+Shift+M", onClick: () => onPopOut?.() },
-        { label: "New page", icon: "plus", hint: "Ctrl+N", onClick: addPage },
+          ? { label: "Back to full Nubby", icon: "popIn", hint: keys("Ctrl+Shift+M"), onClick: () => onPopIn?.() }
+          : { label: "Pop out page (mini window)", icon: "popOut", hint: keys("Ctrl+Shift+M"), onClick: () => onPopOut?.() },
+        { label: "New page", icon: "plus", hint: keys("Ctrl+N"), onClick: addPage },
         ...(withExport
           ? [
-              { label: "Save page as PDF…", icon: "print", hint: "Ctrl+P", onClick: exportPdf },
-              { label: "Save page as PNG", icon: "download", hint: "Ctrl+Shift+E", onClick: () => void exportPng() },
+              { label: "Save page as PDF…", icon: "print", hint: keys("Ctrl+P"), onClick: exportPdf },
+              { label: "Save page as PNG", icon: "download", hint: keys("Ctrl+Shift+E"), onClick: () => void exportPng() },
             ]
           : []),
         { label: "Name, cover & paper…", icon: "settings", onClick: onEditNotebook },
@@ -663,13 +664,13 @@ export function NotebookView({
             else void windowControls.startDragging();
           }}
         >
-          <button className="mini-btn" aria-label="Previous page" title="Previous page (Alt+←)" disabled={idx <= 0} onClick={prev}>
+          <button className="mini-btn" aria-label="Previous page" title={`Previous page (${TURN.prev})`} disabled={idx <= 0} onClick={prev}>
             <Icon name="chevronLeft" size={16} stroke={2.4} />
           </button>
           <button
             className="mini-btn"
             aria-label={idx >= notebook.pages.length - 1 ? "New page" : "Next page"}
-            title={idx >= notebook.pages.length - 1 ? "New page (Ctrl+N)" : "Next page (Alt+→)"}
+            title={idx >= notebook.pages.length - 1 ? keys("New page (Ctrl+N)") : `Next page (${TURN.next})`}
             onClick={next}
           >
             <Icon name={idx >= notebook.pages.length - 1 ? "plus" : "chevronRight"} size={16} stroke={2.4} />
@@ -686,11 +687,11 @@ export function NotebookView({
           >
             <Icon name="pin" size={16} />
           </button>
-          <button className="mini-btn mini-btn--full" title="Back to full Nubby (Ctrl+Shift+M)" onClick={onPopIn}>
+          <button className="mini-btn mini-btn--full" title={keys("Back to full Nubby (Ctrl+Shift+M)")} onClick={onPopIn}>
             <Icon name="popIn" size={15} stroke={2.2} />
             <span>Full</span>
           </button>
-          {isTauri && (
+          {isTauri && !isMac && (
             <div className="winctl winctl--mini">
               <button aria-label="Minimise" onClick={() => windowControls.minimize()}>
                 <Icon name="minimize" size={13} stroke={1.5} />
@@ -747,7 +748,7 @@ export function NotebookView({
                 </button>
               );
             })}
-            <button className="thumb thumb--new" onClick={addPage} title="New page (Ctrl+N)">
+            <button className="thumb thumb--new" onClick={addPage} title={keys("New page (Ctrl+N)")}>
               <span className="thumb__paper thumb__paper--new">
                 <Icon name="plus" size={18} stroke={2.6} />
                 <span className="thumb__new">New page</span>
@@ -760,14 +761,14 @@ export function NotebookView({
         <div className="stage">
           {!mini && (
           <div className="turns" style={{ width: PAGE_W }}>
-            <button className="turn turn--prev" aria-label="Previous page" disabled={idx <= 0} onClick={prev} title="Previous page (Alt+←)">
+            <button className="turn turn--prev" aria-label="Previous page" disabled={idx <= 0} onClick={prev} title={`Previous page (${TURN.prev})`}>
               <Icon name="chevronLeft" size={18} stroke={2.6} />
             </button>
             <button
               className="turn turn--next"
               aria-label={idx >= notebook.pages.length - 1 ? "New page" : "Next page"}
               onClick={next}
-              title={idx >= notebook.pages.length - 1 ? "New page (Ctrl+N)" : "Next page (Alt+→)"}
+              title={idx >= notebook.pages.length - 1 ? keys("New page (Ctrl+N)") : `Next page (${TURN.next})`}
             >
               <Icon name={idx >= notebook.pages.length - 1 ? "plus" : "chevronRight"} size={18} stroke={2.6} />
             </button>
@@ -840,7 +841,6 @@ export function NotebookView({
                   onDuplicate={duplicateItem}
                 />
               )}
-              {night && <div className="paper-lamp nb-noexport" aria-hidden />}
             </div>
           </div>
         </div>
@@ -877,9 +877,9 @@ export function NotebookView({
             </div>
           </div>
           <p className="side-col__hint">
-            Alt + ← / → turns the page.
+            {TURN.both} turns the page.
             <br />
-            Paste a picture anywhere with Ctrl V.
+            {keys("Paste a picture anywhere with Ctrl V.")}
           </p>
         </aside>
         )}

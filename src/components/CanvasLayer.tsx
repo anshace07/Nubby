@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type PointerEvent as RPointerEvent } from "react";
 import { STICKY_COLORS } from "../lib/catalog";
 import { assetUrl } from "../lib/repo";
+import { keys } from "../lib/platform";
 import type { CanvasItem, StickyColor, StickyItem } from "../lib/types";
 import { clamp, isTypingTarget, mimeFromName } from "../lib/util";
 import { Icon } from "./Icon";
@@ -384,11 +385,11 @@ export function CanvasLayer({
             </button>
           )}
           {selected.kind === "image" && (
-            <button className="item-tools__btn" title="Copy picture (Ctrl+C)" onClick={() => onCopy(selected)}>
+            <button className="item-tools__btn" title={keys("Copy picture (Ctrl+C)")} onClick={() => onCopy(selected)}>
               <Icon name="copy" size={16} />
             </button>
           )}
-          <button className="item-tools__btn" title="Duplicate (Ctrl+D)" onClick={() => onDuplicate(selected)}>
+          <button className="item-tools__btn" title={keys("Duplicate (Ctrl+D)")} onClick={() => onDuplicate(selected)}>
             <Icon name="plus" size={16} />
           </button>
           <button className="item-tools__btn" title="Bring to front" onClick={() => bringFront(selected)}>

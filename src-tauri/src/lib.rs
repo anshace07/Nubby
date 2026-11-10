@@ -23,6 +23,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 
 use serde::Serialize;
 use tauri::ipc::{InvokeBody, Request, Response};
+use tauri::menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu};
 use tauri::{Manager, State};
 
 struct Store {
@@ -259,7 +260,10 @@ fn search_pages(store: State<Store>, query: String) -> Result<Vec<Hit>, String> 
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+    #[cfg(target_os = "macos")]
+    let builder = with_mac_menu(builder);
+    builder
         .plugin(tauri_plugin_opener::init())
         .setup(|app| {
             let root = default_root(app.handle());
@@ -289,4 +293,75 @@ pub fn run() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running Nubby");
+}
+
+/// The Mac menu bar: the usual App / Edit / View / Window menus, except that Quit
+/// closes the window the normal way first, so the page saves what was just typed.
+/// (The stock Quit item ends the app without asking the window.) Built on every
+/// platform so it is type-checked everywhere, attached only on macOS.
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn mac_menu<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> tauri::Result<Menu<R>> {
+    let quit = MenuItem::with_id(app, "quit", "Quit Nubby", true, Some("CmdOrCtrl+Q"))?;
+    let app_menu = Submenu::with_items(
+        app,
+        "Nubby",
+        true,
+        &[
+            &PredefinedMenuItem::about(app, Some("About Nubby"), Some(AboutMetadata::default()))?,
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::services(app, None)?,
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::hide(app, None)?,
+            &PredefinedMenuItem::hide_others(app, None)?,
+            &PredefinedMenuItem::show_all(app, None)?,
+            &PredefinedMenuItem::separator(app)?,
+            &quit,
+        ],
+    )?;
+    let edit = Submenu::with_items(
+        app,
+        "Edit",
+        true,
+        &[
+            &PredefinedMenuItem::undo(app, None)?,
+            &PredefinedMenuItem::redo(app, None)?,
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::cut(app, None)?,
+            &PredefinedMenuItem::copy(app, None)?,
+            &PredefinedMenuItem::paste(app, None)?,
+            &PredefinedMenuItem::select_all(app, None)?,
+        ],
+    )?;
+    let view = Submenu::with_items(app, "View", true, &[&PredefinedMenuItem::fullscreen(app, None)?])?;
+    let window = Submenu::with_items(
+        app,
+        "Window",
+        true,
+        &[
+            &PredefinedMenuItem::minimize(app, None)?,
+            &PredefinedMenuItem::maximize(app, None)?,
+            &PredefinedMenuItem::separator(app)?,
+            &PredefinedMenuItem::close_window(app, None)?,
+        ],
+    )?;
+    Menu::with_items(app, &[&app_menu, &edit, &view, &window])
+}
+
+/// Puts the Mac menu bar on the app (called on macOS only).
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn with_mac_menu(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
+    builder.menu(|app| mac_menu(app)).on_menu_event(|app, event| {
+        if event.id().as_ref() == "quit" {
+            quit_after_save(app);
+        }
+    })
+}
+
+/// Quit after the open page has saved: close the window (which saves, then exits).
+#[cfg_attr(not(target_os = "macos"), allow(dead_code))]
+fn quit_after_save<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    match app.get_webview_window("main") {
+        Some(win) if win.close().is_ok() => {}
+        _ => app.exit(0),
+    }
 }

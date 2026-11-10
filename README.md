@@ -1,6 +1,6 @@
 # Nubby
 
-**A paper notebook for typed notes.** Free, local, offline. For Windows.
+**A paper notebook for typed notes.** Free, local, offline. For Windows and Mac.
 
 <!-- Hero GIF goes here: a 10-second screen recording of typing a page, pasting a picture and dropping a sticky note. -->
 
@@ -18,8 +18,8 @@ Notebooks felt lifeless, so I made one that doesn't. Nubby looks and feels like 
 - **Pop-out mini window** — one click (or Ctrl+Shift+M) shrinks Nubby to just the page, in a small window that can stay on top of everything else. Keep it beside a lecture video or an article and take notes as you go; one click brings the full app back.
 - **Search every page** with Ctrl+K.
 - **Export** a page as PDF or PNG.
-- **Night desk** — the room goes dark, the paper stays paper.
-- **Autosave**, with crash-safe writes. Your notes are plain files in `Documents\Nubby`.
+- **Calm and dark** — a quiet dark app around cream paper. Lay the page on a dark desk or a cream one; the paper stays paper.
+- **Autosave**, with crash-safe writes. Your notes are plain files in your Documents folder, in `Nubby`.
 
 No account. No cloud. No tracking.
 
@@ -33,10 +33,21 @@ Nubby draws its pages with Microsoft Edge WebView2, which comes with Windows 11 
 
 **Uninstall:** Settings → Apps → Nubby → Uninstall. Your notes stay in `Documents\Nubby`.
 
+## Install (Mac — macOS 11 or newer, Apple Silicon or Intel)
+
+1. Download `Nubby_<version>_universal.dmg` from [Releases](../../releases).
+2. Open it and drag **Nubby** into **Applications**.
+3. Open Nubby. It isn't notarized by Apple yet, so the first time macOS says it can't check the app. Click **Done**, open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** next to Nubby, then confirm. After that it opens like any other app.
+4. When Nubby first saves, macOS asks whether it may use your Documents folder. Click **Allow** — that's where your notebooks live.
+
+**Uninstall:** drag Nubby from Applications to the Bin. Your notes stay in `~/Documents/Nubby`.
+
 ## Where your notes live
 
+`Documents\Nubby` on Windows, `~/Documents/Nubby` on a Mac:
+
 ```text
-Documents\Nubby\
+Nubby/
   shelf.json                       order of notebooks on the shelf
   board.json                       the loose sticky board
   notebooks\<id>\notebook.json     name, cover, paper, page order
@@ -48,6 +59,8 @@ Documents\Nubby\
 Back up that folder and you've backed up everything.
 
 ## Shortcuts
+
+On a Mac use ⌘ for Ctrl and ⌥ for Alt; turning the page is ⌥⌘ ← / → there (Option+arrow keeps jumping between words). Nubby's own menus and Help show the Mac keys.
 
 | Keys | Does |
 | --- | --- |
@@ -74,7 +87,7 @@ Back up that folder and you've backed up everything.
 
 ## Build from source
 
-You need [Node.js](https://nodejs.org) 20+ and [Rust](https://rustup.rs). On Windows, also install the Microsoft C++ Build Tools (the "Desktop development with C++" workload).
+You need [Node.js](https://nodejs.org) 20+ and [Rust](https://rustup.rs). On Windows, also install the Microsoft C++ Build Tools (the "Desktop development with C++" workload); on a Mac, the Xcode command line tools (`xcode-select --install`).
 
 ```bash
 npm install
@@ -82,13 +95,13 @@ npm run tauri dev     # run Nubby with hot reload
 npm run tauri build   # installers land in src-tauri/target/release/bundle/
 ```
 
-Every push to `main` builds Nubby on Windows with GitHub Actions (`.github/workflows/build-windows.yml`) as a check; the installers it makes are on each run's page under Artifacts.
+Every push to `main` and every pull request builds Nubby on Windows and on a Mac with GitHub Actions (`.github/workflows/`). The Mac job makes one `.dmg` for Apple Silicon and Intel Macs and, for a version tag like `v0.2.0`, attaches it to that release; the Windows installers it makes are a build check, kept on each run's page under Artifacts.
 
 The setup on the [Releases](../../releases) page is made with `installer/nubby.nsi` — a small per-user installer that updates Nubby in place and never touches your notes. `scripts/cross-build-windows.sh` builds it on Linux, without a Windows machine.
 
 ## How it's built
 
-[Tauri 2](https://tauri.app) (a small Rust backend that only reads and writes files in your Nubby folder) with React, TypeScript, Vite and the [TipTap](https://tiptap.dev) editor. The whole app is about 9 MB.
+[Tauri 2](https://tauri.app) (a small Rust backend that only reads and writes files in your Nubby folder) with React, TypeScript, Vite and the [TipTap](https://tiptap.dev) editor. The whole app is about 9 MB. It draws with Microsoft Edge WebView2 on Windows and Safari's WebKit on a Mac.
 
 ```text
 src/components/   shelf, page, toolbar, sticky notes, pictures

@@ -1,4 +1,5 @@
 import type { View } from "../lib/types";
+import { keys } from "../lib/platform";
 import { Icon } from "./Icon";
 
 type NavKey = "shelf" | "recent" | "board" | "trash";
@@ -55,10 +56,10 @@ export function Sidebar({
       </button>
 
       {NAV.map((n) => item(n.key, n.label, n.icon))}
-      <button className="nav" title={collapsed ? "Search (Ctrl+K)" : undefined} onClick={onSearch}>
+      <button className="nav" title={collapsed ? keys("Search (Ctrl+K)") : undefined} onClick={onSearch}>
         <Icon name="search" size={19} />
         {!collapsed && <span className="nav__label">Search</span>}
-        {!collapsed && <kbd className="kbd">Ctrl K</kbd>}
+        {!collapsed && <kbd className="kbd">{keys("Ctrl K")}</kbd>}
       </button>
       {item(
         "trash",
@@ -78,7 +79,7 @@ export function Sidebar({
           <p className="tipcard__body">
             Start a line with <kbd className="kbd kbd--ink">#</kbd> and a space for a peach heading,{" "}
             <kbd className="kbd kbd--ink">##</kbd> for a big title.{" "}
-            <kbd className="kbd kbd--ink">LP:</kbd> makes a green tag. <kbd className="kbd kbd--ink">Ctrl V</kbd> drops a picture anywhere.
+            <kbd className="kbd kbd--ink">LP:</kbd> makes a green tag. <kbd className="kbd kbd--ink">{keys("Ctrl V")}</kbd> drops a picture anywhere.
           </p>
           <button className="btn btn--sm" onClick={onHelp}>
             All shortcuts
