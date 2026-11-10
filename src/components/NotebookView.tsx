@@ -841,7 +841,6 @@ export function NotebookView({
                   onDuplicate={duplicateItem}
                 />
               )}
-              {night && <div className="paper-lamp nb-noexport" aria-hidden />}
             </div>
           </div>
         </div>

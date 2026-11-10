@@ -52,8 +52,8 @@ export function TitleBar({
         )}
         <button
           className="tb-btn"
-          aria-label={night ? "Switch to day desk" : "Switch to night desk"}
-          title={night ? "Day desk" : "Night desk"}
+          aria-label={night ? "Switch to a cream desk" : "Switch to a dark desk"}
+          title={night ? "Cream desk" : "Dark desk"}
           onClick={onToggleNight}
         >
           <Icon name={night ? "sun" : "moon"} size={18} />

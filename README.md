@@ -18,7 +18,7 @@ Notebooks felt lifeless, so I made one that doesn't. Nubby looks and feels like 
 - **Pop-out mini window** — one click (or Ctrl+Shift+M) shrinks Nubby to just the page, in a small window that can stay on top of everything else. Keep it beside a lecture video or an article and take notes as you go; one click brings the full app back.
 - **Search every page** with Ctrl+K.
 - **Export** a page as PDF or PNG.
-- **Night desk** — the room goes dark, the paper stays paper.
+- **Calm and dark** — a quiet dark app around cream paper. Lay the page on a dark desk or a cream one; the paper stays paper.
 - **Autosave**, with crash-safe writes. Your notes are plain files in your Documents folder, in `Nubby`.
 
 No account. No cloud. No tracking.
@@ -95,7 +95,7 @@ npm run tauri dev     # run Nubby with hot reload
 npm run tauri build   # installers land in src-tauri/target/release/bundle/
 ```
 
-Every push to `main` and every pull request builds Nubby on Windows and on a Mac with GitHub Actions (`.github/workflows/`). The Mac job makes one `.dmg` for Apple Silicon and Intel Macs and, for a version tag like `v0.1.3`, attaches it to that release; the Windows installers it makes are a build check, kept on each run's page under Artifacts.
+Every push to `main` and every pull request builds Nubby on Windows and on a Mac with GitHub Actions (`.github/workflows/`). The Mac job makes one `.dmg` for Apple Silicon and Intel Macs and, for a version tag like `v0.2.0`, attaches it to that release; the Windows installers it makes are a build check, kept on each run's page under Artifacts.
 
 The setup on the [Releases](../../releases) page is made with `installer/nubby.nsi` — a small per-user installer that updates Nubby in place and never touches your notes. `scripts/cross-build-windows.sh` builds it on Linux, without a Windows machine.
 

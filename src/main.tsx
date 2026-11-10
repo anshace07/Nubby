@@ -22,6 +22,7 @@ import "./styles/base.css";
 import "./styles/shell.css";
 import "./styles/page.css";
 import "./styles/night.css";
+import "./styles/v2.css";
 import "./styles/print.css";
 
 import App from "./App";

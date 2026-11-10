@@ -7,8 +7,8 @@ import { Icon } from "./Icon";
 import { Menu, type MenuItem } from "./Menu";
 
 type Sort = "shelf" | "recent" | "az";
-const COVER_W = 146;
-const GAP = 34;
+const COVER_W = 132;
+const GAP = 26;
 
 export function Shelf({
   notebooks,
@@ -126,8 +126,8 @@ export function Shelf({
           </div>
         </header>
 
-        <div className="row space-between mt-22">
-          <div className="seg" role="tablist" aria-label="Sort notebooks">
+        <div className="row space-between mt-22 shelf-tabs">
+          <div className="seg seg--tabs" role="tablist" aria-label="Sort notebooks">
             {(
               [
                 ["shelf", "Shelf order"],

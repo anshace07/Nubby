@@ -2,23 +2,27 @@
    Nubby — base tokens, reset and the comic-ink components
    ============================================================ */
 
+/* v2: the app around the paper is dark and quiet (see v2.css); the paper keeps its own colours */
 :root {
   --ink: #1a1a1a;
-  --frame: #f1ebdd;
-  --sheet: #fbf8f1;
-  --desk: #ece5d3;
-  --soft: #f4efe3;
-  --panel: #fbf8f1;
-  --btn-bg: #ffffff;
-  --hover: rgba(26, 26, 26, 0.06);
-  --line: #e2daca;
-  --line-2: #d6cdb8;
-  --text: #1a1a1a;
-  --muted: #5a5347;
+  --frame: #141414;
+  --sheet: #1b1b1b;
+  --desk: #1b1b1b;
+  --soft: #222222;
+  --panel: #242424;
+  --btn-bg: #242424;
+  --hover: rgba(255, 255, 255, 0.06);
+  --line: #2a2a2a;
+  --line-2: #363636;
+  --text: #ededed;
+  --muted: #a3a3a3;
   --muted-2: #6e6656;
-  --outline: #1a1a1a;
-  --shadow-c: #1a1a1a;
-  --sheet-edge: #1a1a1a;
+  --outline: #3a3a3a;
+  --shadow-c: transparent;
+  --sheet-edge: #292929;
+  --accent: #f5c84c;
+  --sel: #3d6bff;
+  --focus: #8aa4ff;
 
   --yellow: #ffd25e;
   --peach: #f7e2c7;
@@ -34,7 +38,7 @@
   --hand: "Patrick Hand", "Segoe Print", cursive;
   --spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
-  color-scheme: light;
+  color-scheme: dark;
 }
 
 * {
@@ -69,7 +73,7 @@ button:disabled {
   opacity: 0.4;
 }
 :focus-visible {
-  outline: 2.5px solid var(--blue);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
 }
 input,

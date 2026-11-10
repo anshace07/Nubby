@@ -166,14 +166,14 @@ export function SettingsSheet({
         <div className="setting">
           <div>
             <p className="setting__title">Desk</p>
-            <p className="setting__sub">Night desk dims the room. The paper stays paper.</p>
+            <p className="setting__sub">What the page lies on. The paper stays paper either way.</p>
           </div>
           <div className="seg">
-            <button className={`seg__btn ${!night ? "seg__btn--on" : ""}`} onClick={() => setNight(false)}>
-              <Icon name="sun" size={15} /> Day
-            </button>
             <button className={`seg__btn ${night ? "seg__btn--on" : ""}`} onClick={() => setNight(true)}>
-              <Icon name="moon" size={15} /> Night
+              <Icon name="moon" size={15} /> Dark
+            </button>
+            <button className={`seg__btn ${!night ? "seg__btn--on" : ""}`} onClick={() => setNight(false)}>
+              <Icon name="sun" size={15} /> Cream
             </button>
           </div>
         </div>
@@ -194,7 +194,7 @@ export function SettingsSheet({
         <div className="setting setting--last">
           <div>
             <p className="setting__title">About Nubby</p>
-            <p className="setting__sub">Version 0.1.3 · free, local and offline · no accounts, no tracking.</p>
+            <p className="setting__sub">Version 0.2.0 · free, local and offline · no accounts, no tracking.</p>
           </div>
           <img src="/nubby-mark-96.png" alt="" width={44} height={44} />
         </div>
